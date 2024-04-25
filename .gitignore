@@ -1,160 +1,106 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+import google.generativeai as genai
+genai.configure(api_key="AIzaSyC2z6eCS_SXX03QIKz3nA15biwKGXvUy08")
+model = genai.GenerativeModel('gemini-pro')
+import imaplib
+import email
+from email.header import decode_header
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import time
 
-# C extensions
-*.so
+# Set your email and password
+#this is the main company email
+email_address = "admin@funkaary.com"
+password = "Shlok007"
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Connect to the IMAP server (for Gmail, use 'imap.gmail.com')
+mail = imaplib.IMAP4_SSL('imap.gmail.com')
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# Log in to your account
+mail.login(email_address, password)
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Infinite loop to continuously monitor the email inbox
+while True:
+    try:
+        # Select the mailbox you want to read (e.g., 'inbox')
+        mail.select("inbox")
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+        # Search for unread emails in the selected mailbox
+        status, messages = mail.search(None, "UNSEEN")
+        message_ids = messages[0].split()
 
-# Translations
-*.mo
-*.pot
+        # Check if there are any unread emails
+        if not message_ids:
+            print("No unread messages.")
+            time.sleep(60)  # Wait for 60 seconds before checking again
+            continue
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+        # Loop through each unread email
+        for message_id in message_ids:
+            # Fetch the unread email
+            status, msg_data = mail.fetch(message_id, "(RFC822)")
+            if status != 'OK':
+                print("Error fetching message:", message_id)
+                continue
 
-# Flask stuff:
-instance/
-.webassets-cache
+            raw_email = msg_data[0][1]
 
-# Scrapy stuff:
-.scrapy
+            # Decode the raw email bytes to a string
+            raw_email_string = raw_email.decode("utf-8")
 
-# Sphinx documentation
-docs/_build/
+            # Parse the raw email using the email library
+            msg = email.message_from_string(raw_email_string)
 
-# PyBuilder
-.pybuilder/
-target/
+            # Extract information from the email
+            subject, encoding = decode_header(msg["Subject"])[0]
+            if isinstance(subject, bytes):
+                subject = subject.decode(encoding or "utf-8")
 
-# Jupyter Notebook
-.ipynb_checkpoints
+            email_body = ""
+            if msg.is_multipart():
+                for part in msg.walk():
+                    content_type = part.get_content_type()
+                    if content_type == "text/plain":
+                        email_body = part.get_payload(decode=True).decode()
+                        break
+            else:
+                email_body = msg.get_payload(decode=True).decode()
 
-# IPython
-profile_default/
-ipython_config.py
+            response = model.generate_content(f"classify this email as complaint, query or request : {email_body}")
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+            # Perform classification on the email body (Replace this with your classification logic)
+            # For demonstration, let's assume the body contains keywords "complaint" or "query" or" "request" these are the names of the departments
+            if "complaint" in (response.text).lower():
+                to_address = "godshlok2011@gmail.com"
+            elif "query" in (response.text).lower():
+                to_address = "rameshrajni2011@gmail.com"
+            elif "request" in (response.text).lower():
+                to_address = "goelshlok2011@gmail.com"
+            else:
+                print("Could not classify the email. No action taken.")
+                continue
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+            # Create a MIME message for forwarding
+            forwarded_msg = MIMEMultipart()
+            forwarded_msg["From"] = email_address
+            forwarded_msg["To"] = to_address
+            forwarded_msg["Subject"] = subject
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
+            # Add the original email as an attachment
+            forwarded_msg.attach(MIMEText(raw_email_string, "plain"))
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/#use-with-ide
-.pdm.toml
+            # Send the email using SMTP
+            with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+                smtp.login(email_address, password)
+                smtp.sendmail(email_address, to_address, forwarded_msg.as_string())
+                print("Email forwarded successfully to:", to_address)
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+            # Mark the email as read (optional)
+            mail.store(message_id, '+FLAGS', '\Seen')
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+    except Exception as e:
+        print("An error occurred:", e)
 
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+# Logout from the server
+mail.logout()
