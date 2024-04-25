@@ -3,6 +3,7 @@ The EMail Classifier is an advanced email classification system designed to stre
 
 
  ABSTRACT 
+ 
  With  the  exponential  growth  of  digital  communication,  managing  emails  has  become  a 
  daunting  task  for  individuals  and  organizations  alike.  In  response,  automated  email 
  classification  systems  have  emerged  as  invaluable  tools  to  streamline  this  process,  facilitating 
