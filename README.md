@@ -17,10 +17,10 @@ The EMail Classifier is an advanced email classification system designed to stre
 
  # KEY FEATURES
 
-#Email Retrieval: Utilizes the IMAP protocol in Python to fetch emails from the Barclays email server.
+Email Retrieval: Utilizes the IMAP protocol in Python to fetch emails from the Barclays email server.
 
-#Text Classification: Applies machine learning techniques, specifically Google GenAI (Language Model), to classify emails into predefined categories such as complaints, queries, or requests.
+Text Classification: Applies machine learning techniques, specifically Google GenAI (Language Model), to classify emails into predefined categories such as complaints, queries, or requests.
 
-#Routing: Uses SMTP to forward classified emails to the relevant departments or teams within Barclays for further processing.
+Routing: Uses SMTP to forward classified emails to the relevant departments or teams within Barclays for further processing.
 
-#Feedback Loop: Implements a feedback mechanism where human intervention can validate and correct misclassifications, improving the accuracy of the classification model over time.
+Feedback Loop: Implements a feedback mechanism where human intervention can validate and correct misclassifications, improving the accuracy of the classification model over time.
