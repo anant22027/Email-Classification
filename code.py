@@ -1,3 +1,6 @@
+#pip install -q -U google-generativeai (for installing genai)
+
+
 import google.generativeai as genai
 genai.configure(api_key="AIzaSyC2z6eCS_SXX03QIKz3nA15biwKGXvUy08")
 model = genai.GenerativeModel('gemini-pro')
